@@ -4,8 +4,7 @@ go 1.18
 
 require (
 	github.com/natefinch/lumberjack v2.0.0+incompatible
-	github.com/stretchr/testify v1.8.0 // indirect
-	go.uber.org/zap v1.22.0
+	go.uber.org/zap v1.23.0
 )
 
 require (
