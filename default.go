@@ -43,8 +43,8 @@ func WithValuer(vs ...Valuer) *Log {
 }
 
 // WithNewValuer return log with new Valuer function without default Valuer.
-func WithNewValuer() *Log {
-	return defaultLogger.WithNewValuer()
+func WithNewValuer(fs ...Valuer) *Log {
+	return defaultLogger.WithNewValuer(fs...)
 }
 
 // WithContext return log with inject context.
