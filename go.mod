@@ -1,6 +1,6 @@
 module github.com/things-go/log
 
-go 1.18
+go 1.21
 
 require (
 	github.com/natefinch/lumberjack v2.0.0+incompatible

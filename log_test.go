@@ -1,68 +1,104 @@
-package log
+package log_test
 
 import (
 	"context"
 	"testing"
 
-	"go.uber.org/zap"
+	"github.com/things-go/log"
 )
 
-func TestNew(t *testing.T) {
-	l, lv := New(WithConfig(Config{Level: "debug", Format: "json"}))
-	ReplaceGlobals(NewLoggerWith(l, lv))
-	SetDefaultValuer(Caller(3), func(ctx context.Context) Field { return zap.String("field_fn_key1", "field_fn_value1") })
-
-	Debug("Debug")
-	Info("Info")
-	Warn("Warn")
-	Info("info")
-	Error("Error")
-	DPanic("DPanic")
-
-	Debugf("Debugf: %s", "debug")
-	Infof("Infof: %s", "info")
-	Warnf("Warnf: %s", "warn")
-	Infof("Infof: %s", "info")
-	Errorf("Errorf: %s", "error")
-	DPanicf("DPanicf: %s", "dPanic")
-
-	Debugw("Debugw", "Debugw", "w")
-	Infow("Infow", "Infow", "w")
-	Warnw("Warnw", "Warnw", "w")
-	Infow("Infow", "Infow", "w")
-	Errorw("Errorw", "Errorw", "w")
-	DPanicw("DPanicw", "DPanicw", "w")
-
-	shouPanic(t, func() {
-		Panic("Panic")
-	})
-	shouPanic(t, func() {
-		Panicf("Panicf: %s", "panic")
-	})
-	shouPanic(t, func() {
-		Panicw("Panicw: %s", "panic", "w")
-	})
-
-	With(zap.String("aa", "bb")).Debug("debug with")
-
-	Named("another").Debug("debug named")
-
-	Logger().Debug("desugar")
-
-	WithContext(context.Background()).
-		WithValuer(func(ctx context.Context) Field { return zap.String("field_fn_key2", "field_fn_value2") }).
-		Debug("with context")
-
-	WithContext(context.Background()).
-		WithValuer(func(ctx context.Context) Field { return zap.String("field_fn_key3", "field_fn_value3") }).
-		Debug("with field fn")
-
-	Logger().With(zap.Namespace("aaaa")).With(zap.String("xx", "yy")).Debug("----<>")
-
-	_ = Sync()
+func init() {
+	l, lv := log.New(log.WithConfig(log.Config{Level: "debug", Format: "json"}))
+	log.ReplaceGlobals(log.NewLoggerWith(l, lv))
+	log.SetDefaultValuer(
+		log.Caller(3),
+		func(ctx context.Context) log.Field {
+			return log.String("deft_key1", "deft_val1")
+		},
+	)
 }
 
-func shouPanic(t *testing.T, f func()) {
+func Test_LoggerNormal(t *testing.T) {
+	log.Debug("Debug")
+	log.Info("Info")
+	log.Warn("Warn")
+	log.Info("info")
+	log.Error("Error")
+	log.DPanic("DPanic")
+}
+
+func Test_LoggerFormater(t *testing.T) {
+	log.Debugf("Debugf: %s", "debug")
+	log.Infof("Infof: %s", "info")
+	log.Warnf("Warnf: %s", "warn")
+	log.Infof("Infof: %s", "info")
+	log.Errorf("Errorf: %s", "error")
+	log.DPanicf("DPanicf: %s", "dPanic")
+}
+
+func Test_LoggerKeyValue(t *testing.T) {
+	log.Debugw("Debugw", "Debugw", "w")
+	log.Infow("Infow", "Infow", "w")
+	log.Warnw("Warnw", "Warnw", "w")
+	log.Infow("Infow", "Infow", "w")
+	log.Errorw("Errorw", "Errorw", "w")
+	log.DPanicw("DPanicw", "DPanicw", "w")
+}
+
+func TestPanic(t *testing.T) {
+	shouldPanic(t, func() {
+		log.Panic("Panic")
+	})
+	shouldPanic(t, func() {
+		log.Panicf("Panicf: %s", "panic")
+	})
+	shouldPanic(t, func() {
+		log.Panicw("Panicw: %s", "panic", "w")
+	})
+}
+
+func Test_LoggerWith(t *testing.T) {
+	log.With(
+		log.String("string", "bb"),
+		log.Int16("int16", 100),
+	).
+		Debug("debug with")
+}
+
+func Test_LoggerNamed(t *testing.T) {
+	log.Named("another").Debug("debug named")
+}
+func Test_Logger_ZapLogger(t *testing.T) {
+	log.Logger().Debug("desugar")
+}
+
+func Test_LoggerNamespace(t *testing.T) {
+	log.Logger().With(log.Namespace("aaaa")).With(log.String("xx", "yy"), log.String("aa", "bb")).Debug("with namespace")
+
+	_ = log.Sync()
+}
+
+type ctxKey struct{}
+
+func Test_Logger_WithContext(t *testing.T) {
+	ctx := context.WithValue(context.Background(), ctxKey{}, "ctx_value")
+	ctxValuer := func(ctx context.Context) log.Field {
+		s, ok := ctx.Value(ctxKey{}).(string)
+		if !ok {
+			return log.Skip()
+		}
+		return log.String("ctx_key", s)
+	}
+	log.WithContext(ctx).
+		WithValuer(ctxValuer).
+		Debug("with context")
+
+	log.WithContext(ctx).
+		WithValuer(ctxValuer).
+		Debug("with field fn")
+}
+
+func shouldPanic(t *testing.T, f func()) {
 	defer func() {
 		e := recover()
 		if e == nil {
