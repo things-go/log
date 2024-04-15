@@ -17,13 +17,15 @@ type Valuer func(ctx context.Context) Field
 /**************************** immutable Valuer ******************************************/
 
 func wrapperField(field Field) Valuer {
-	return func(ctx context.Context) zap.Field {
+	return func(ctx context.Context) Field {
 		return field
 	}
 }
-func ImmutErr(val error) Valuer                          { return wrapperField(zap.Error(val)) }
-func ImmutErrors(key string, val []error) Valuer         { return wrapperField(zap.Errors(key, val)) }
-func ImmutNamedError(key string, val error) Valuer       { return wrapperField(zap.NamedError(key, val)) }
+
+func ImmutErr(val error) Valuer                    { return wrapperField(zap.Error(val)) }
+func ImmutErrors(key string, val []error) Valuer   { return wrapperField(zap.Errors(key, val)) }
+func ImmutNamedError(key string, val error) Valuer { return wrapperField(zap.NamedError(key, val)) }
+
 func ImmutBinary(key string, v []byte) Valuer            { return wrapperField(zap.Binary(key, v)) }
 func ImmutBool(key string, v bool) Valuer                { return wrapperField(zap.Bool(key, v)) }
 func ImmutBoolp(key string, v *bool) Valuer              { return wrapperField(zap.Boolp(key, v)) }
@@ -61,9 +63,12 @@ func ImmutStringp(key string, v *string) Valuer          { return wrapperField(z
 func ImmutUintptr(key string, v uintptr) Valuer          { return wrapperField(zap.Uintptr(key, v)) }
 func ImmutUintptrp(key string, v *uintptr) Valuer        { return wrapperField(zap.Uintptrp(key, v)) }
 func ImmutReflect(key string, v any) Valuer              { return wrapperField(zap.Reflect(key, v)) }
+func ImmutNamespace(key string) Valuer                   { return wrapperField(zap.Namespace(key)) }
 func ImmutStringer(key string, v fmt.Stringer) Valuer    { return wrapperField(zap.Stringer(key, v)) }
 func ImmutTime(key string, v time.Time) Valuer           { return wrapperField(zap.Time(key, v)) }
 func ImmutTimep(key string, v *time.Time) Valuer         { return wrapperField(zap.Timep(key, v)) }
+func ImmutStack(key string) Valuer                       { return wrapperField(zap.Stack(key)) }
+func ImmutStackSkip(key string, skip int) Valuer         { return wrapperField(zap.StackSkip(key, skip)) }
 func ImmutDuration(key string, v time.Duration) Valuer   { return wrapperField(zap.Duration(key, v)) }
 func ImmutDurationp(key string, v *time.Duration) Valuer { return wrapperField(zap.Durationp(key, v)) }
 func ImmutObject(key string, val ObjectMarshaler) Valuer { return wrapperField(zap.Object(key, val)) }
@@ -72,6 +77,22 @@ func ImmutDict(key string, val ...Field) Valuer          { return wrapperField(z
 func ImmutAny(key string, v any) Valuer                  { return wrapperField(zap.Any(key, v)) }
 
 /**************************** Dynamic Valuer ******************************************/
+
+func FromErr(vf func(context.Context) error) Valuer {
+	return func(ctx context.Context) Field {
+		return zap.Error(vf(ctx))
+	}
+}
+func FromErrors(key string, vf func(context.Context) []error) Valuer {
+	return func(ctx context.Context) Field {
+		return zap.Errors(key, vf(ctx))
+	}
+}
+func FromNamedError(key string, vf func(context.Context) error) Valuer {
+	return func(ctx context.Context) Field {
+		return zap.NamedError(key, vf(ctx))
+	}
+}
 
 func FromBinary(key string, vf func(context.Context) []byte) Valuer {
 	return func(ctx context.Context) Field {
@@ -286,20 +307,6 @@ func FromDurationp(key string, vf func(context.Context) *time.Duration) Valuer {
 func FromAny(key string, vf func(context.Context) any) Valuer {
 	return func(ctx context.Context) Field {
 		return zap.Any(key, vf(ctx))
-	}
-}
-func FromNamespace(key string) Valuer {
-	field := zap.Namespace(key)
-	return wrapperField(field)
-}
-func FromStack(key string) Valuer {
-	return func(ctx context.Context) Field {
-		return zap.Stack(key)
-	}
-}
-func FromStackSkip(key string, skip int) Valuer {
-	return func(ctx context.Context) Field {
-		return zap.StackSkip(key, skip)
 	}
 }
 
