@@ -20,7 +20,7 @@ func newFieldPool() *fieldPool {
 	return &fieldPool{
 		pool: sync.Pool{
 			New: func() any {
-				return &fieldContainer{make([]zap.Field, 0, 16)}
+				return &fieldContainer{make([]zap.Field, 0, 32)}
 			},
 		},
 	}
