@@ -6,26 +6,31 @@ import (
 	"go.uber.org/zap"
 )
 
-var fieldPool = newFieldPool()
+var defaultFieldPool = newFieldPool()
 
-type innerFieldPool struct {
+type fieldContainer struct {
+	Fields []Field
+}
+
+type fieldPool struct {
 	pool sync.Pool
 }
 
-func newFieldPool() *innerFieldPool {
-	return &innerFieldPool{
+func newFieldPool() *fieldPool {
+	return &fieldPool{
 		pool: sync.Pool{
 			New: func() any {
-				return make([]zap.Field, 0, 16)
+				return &fieldContainer{make([]zap.Field, 0, 16)}
 			},
 		},
 	}
 }
 
-func (p *innerFieldPool) Get() []zap.Field {
-	return p.pool.Get().([]zap.Field)
+func (p *fieldPool) Get() *fieldContainer {
+	return p.pool.Get().(*fieldContainer)
 }
 
-func (p *innerFieldPool) Put(fields []zap.Field) {
-	p.pool.Put(fields)
+func (p *fieldPool) Put(c *fieldContainer) {
+	c.Fields = c.Fields[:0]
+	p.pool.Put(c)
 }

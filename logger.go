@@ -181,13 +181,13 @@ func (l *Log) Logx(ctx context.Context, level Level, msg string, fields ...Field
 	if len(l.fn) == 0 {
 		l.log.Log(level, msg, fields...)
 	} else {
-		tmpFields := fieldPool.Get()
-		defer fieldPool.Put(tmpFields)
+		fc := defaultFieldPool.Get()
+		defer defaultFieldPool.Put(fc)
 		for _, f := range l.fn {
-			tmpFields = append(tmpFields, f(ctx))
+			fc.Fields = append(fc.Fields, f(ctx))
 		}
-		tmpFields = append(tmpFields, fields...)
-		l.log.Log(level, msg, tmpFields...)
+		fc.Fields = append(fc.Fields, fields...)
+		l.log.Log(level, msg, fc.Fields...)
 	}
 }
 
