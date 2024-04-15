@@ -11,7 +11,67 @@ import (
 	"go.uber.org/zap"
 )
 
-/**************************** Valuer ******************************************/
+// Valuer is returns a log value.
+type Valuer func(ctx context.Context) Field
+
+/**************************** immutable Valuer ******************************************/
+
+func wrapperField(field Field) Valuer {
+	return func(ctx context.Context) zap.Field {
+		return field
+	}
+}
+func ImmutErr(val error) Valuer                          { return wrapperField(zap.Error(val)) }
+func ImmutErrors(key string, val []error) Valuer         { return wrapperField(zap.Errors(key, val)) }
+func ImmutNamedError(key string, val error) Valuer       { return wrapperField(zap.NamedError(key, val)) }
+func ImmutBinary(key string, v []byte) Valuer            { return wrapperField(zap.Binary(key, v)) }
+func ImmutBool(key string, v bool) Valuer                { return wrapperField(zap.Bool(key, v)) }
+func ImmutBoolp(key string, v *bool) Valuer              { return wrapperField(zap.Boolp(key, v)) }
+func ImmutByteString(key string, v []byte) Valuer        { return wrapperField(zap.ByteString(key, v)) }
+func ImmutComplex128(key string, v complex128) Valuer    { return wrapperField(zap.Complex128(key, v)) }
+func ImmutComplex128p(key string, v *complex128) Valuer  { return wrapperField(zap.Complex128p(key, v)) }
+func ImmutComplex64(key string, v complex64) Valuer      { return wrapperField(zap.Complex64(key, v)) }
+func ImmutComplex64p(key string, v *complex64) Valuer    { return wrapperField(zap.Complex64p(key, v)) }
+func ImmutFloat64(key string, v float64) Valuer          { return wrapperField(zap.Float64(key, v)) }
+func ImmutFloat64p(key string, v *float64) Valuer        { return wrapperField(zap.Float64p(key, v)) }
+func ImmutFloat32(key string, v float32) Valuer          { return wrapperField(zap.Float32(key, v)) }
+func ImmutFloat32p(key string, v *float32) Valuer        { return wrapperField(zap.Float32p(key, v)) }
+func ImmutInt(key string, v int) Valuer                  { return wrapperField(zap.Int(key, v)) }
+func ImmutIntp(key string, v *int) Valuer                { return wrapperField(zap.Intp(key, v)) }
+func ImmutInt64(key string, v int64) Valuer              { return wrapperField(zap.Int64(key, v)) }
+func ImmutInt64p(key string, v *int64) Valuer            { return wrapperField(zap.Int64p(key, v)) }
+func ImmutInt32(key string, v int32) Valuer              { return wrapperField(zap.Int32(key, v)) }
+func ImmutInt32p(key string, v *int32) Valuer            { return wrapperField(zap.Int32p(key, v)) }
+func ImmutInt16(key string, v int16) Valuer              { return wrapperField(zap.Int16(key, v)) }
+func ImmutInt16p(key string, v *int16) Valuer            { return wrapperField(zap.Int16p(key, v)) }
+func ImmutInt8(key string, v int8) Valuer                { return wrapperField(zap.Int8(key, v)) }
+func ImmutInt8p(key string, v *int8) Valuer              { return wrapperField(zap.Int8p(key, v)) }
+func ImmutUint(key string, v uint) Valuer                { return wrapperField(zap.Uint(key, v)) }
+func ImmutUintp(key string, v *uint) Valuer              { return wrapperField(zap.Uintp(key, v)) }
+func ImmutUint64(key string, v uint64) Valuer            { return wrapperField(zap.Uint64(key, v)) }
+func ImmutUint64p(key string, v *uint64) Valuer          { return wrapperField(zap.Uint64p(key, v)) }
+func ImmutUint32(key string, v uint32) Valuer            { return wrapperField(zap.Uint32(key, v)) }
+func ImmutUint32p(key string, v *uint32) Valuer          { return wrapperField(zap.Uint32p(key, v)) }
+func ImmutUint16(key string, v uint16) Valuer            { return wrapperField(zap.Uint16(key, v)) }
+func ImmutUint16p(key string, v *uint16) Valuer          { return wrapperField(zap.Uint16p(key, v)) }
+func ImmutUint8(key string, v uint8) Valuer              { return wrapperField(zap.Uint8(key, v)) }
+func ImmutUint8p(key string, v *uint8) Valuer            { return wrapperField(zap.Uint8p(key, v)) }
+func ImmutString(key string, v string) Valuer            { return wrapperField(zap.String(key, v)) }
+func ImmutStringp(key string, v *string) Valuer          { return wrapperField(zap.Stringp(key, v)) }
+func ImmutUintptr(key string, v uintptr) Valuer          { return wrapperField(zap.Uintptr(key, v)) }
+func ImmutUintptrp(key string, v *uintptr) Valuer        { return wrapperField(zap.Uintptrp(key, v)) }
+func ImmutReflect(key string, v any) Valuer              { return wrapperField(zap.Reflect(key, v)) }
+func ImmutStringer(key string, v fmt.Stringer) Valuer    { return wrapperField(zap.Stringer(key, v)) }
+func ImmutTime(key string, v time.Time) Valuer           { return wrapperField(zap.Time(key, v)) }
+func ImmutTimep(key string, v *time.Time) Valuer         { return wrapperField(zap.Timep(key, v)) }
+func ImmutDuration(key string, v time.Duration) Valuer   { return wrapperField(zap.Duration(key, v)) }
+func ImmutDurationp(key string, v *time.Duration) Valuer { return wrapperField(zap.Durationp(key, v)) }
+func ImmutObject(key string, val ObjectMarshaler) Valuer { return wrapperField(zap.Object(key, val)) }
+func ImmutInline(val ObjectMarshaler) Valuer             { return wrapperField(zap.Inline(val)) }
+func ImmutDict(key string, val ...Field) Valuer          { return wrapperField(zap.Dict(key, val...)) }
+func ImmutAny(key string, v any) Valuer                  { return wrapperField(zap.Any(key, v)) }
+
+/**************************** Dynamic Valuer ******************************************/
 
 func FromBinary(key string, vf func(context.Context) []byte) Valuer {
 	return func(ctx context.Context) Field {
@@ -230,9 +290,7 @@ func FromAny(key string, vf func(context.Context) any) Valuer {
 }
 func FromNamespace(key string) Valuer {
 	field := zap.Namespace(key)
-	return func(ctx context.Context) Field {
-		return field
-	}
+	return wrapperField(field)
 }
 func FromStack(key string) Valuer {
 	return func(ctx context.Context) Field {
@@ -245,281 +303,29 @@ func FromStackSkip(key string, skip int) Valuer {
 	}
 }
 
-func ImmutBinary(key string, v []byte) Valuer {
-	field := zap.Binary(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutBool(key string, v bool) Valuer {
-	field := zap.Bool(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutBoolp(key string, v *bool) Valuer {
-	field := zap.Boolp(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutByteString(key string, v []byte) Valuer {
-	field := zap.ByteString(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutComplex128(key string, v complex128) Valuer {
-	field := zap.Complex128(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutComplex128p(key string, v *complex128) Valuer {
-	field := zap.Complex128p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutComplex64(key string, v complex64) Valuer {
-	field := zap.Complex64(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutComplex64p(key string, v *complex64) Valuer {
-	field := zap.Complex64p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutFloat64(key string, v float64) Valuer {
-	field := zap.Float64(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutFloat64p(key string, v *float64) Valuer {
-	field := zap.Float64p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutFloat32(key string, v float32) Valuer {
-	field := zap.Float32(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutFloat32p(key string, v *float32) Valuer {
-	field := zap.Float32p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt(key string, v int) Valuer {
-	field := zap.Int(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutIntp(key string, v *int) Valuer {
-	field := zap.Intp(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt64(key string, v int64) Valuer {
-	field := zap.Int64(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt64p(key string, v *int64) Valuer {
-	field := zap.Int64p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt32(key string, v int32) Valuer {
-	field := zap.Int32(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt32p(key string, v *int32) Valuer {
-	field := zap.Int32p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt16(key string, v int16) Valuer {
-	field := zap.Int16(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt16p(key string, v *int16) Valuer {
-	field := zap.Int16p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt8(key string, v int8) Valuer {
-	field := zap.Int8(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutInt8p(key string, v *int8) Valuer {
-	field := zap.Int8p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-
-func ImmutUint(key string, v uint) Valuer {
-	field := zap.Uint(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUintp(key string, v *uint) Valuer {
-	field := zap.Uintp(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUint64(key string, v uint64) Valuer {
-	field := zap.Uint64(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUint64p(key string, v *uint64) Valuer {
-	field := zap.Uint64p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUint32(key string, v uint32) Valuer {
-	field := zap.Uint32(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUint32p(key string, v *uint32) Valuer {
-	field := zap.Uint32p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-
-func ImmutUint16(key string, v uint16) Valuer {
-	field := zap.Uint16(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUint16p(key string, v *uint16) Valuer {
-	field := zap.Uint16p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUint8(key string, v uint8) Valuer {
-	field := zap.Uint8(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUint8p(key string, v *uint8) Valuer {
-	field := zap.Uint8p(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-
-func ImmutString(key string, v string) Valuer {
-	field := zap.String(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutStringp(key string, v *string) Valuer {
-	field := zap.Stringp(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUintptr(key string, v uintptr) Valuer {
-	field := zap.Uintptr(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutUintptrp(key string, v *uintptr) Valuer {
-	field := zap.Uintptrp(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutReflect(key string, v any) Valuer {
-	field := zap.Reflect(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutStringer(key string, v fmt.Stringer) Valuer {
-	field := zap.Stringer(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutTime(key string, v time.Time) Valuer {
-	field := zap.Time(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutTimep(key string, v *time.Time) Valuer {
-	field := zap.Timep(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutDuration(key string, v time.Duration) Valuer {
-	field := zap.Duration(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutDurationp(key string, v *time.Duration) Valuer {
-	field := zap.Durationp(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-func ImmutAny(key string, v any) Valuer {
-	field := zap.Any(key, v)
-	return func(ctx context.Context) Field {
-		return field
-	}
-}
-
 /**************************** helper ******************************************/
+
 func caller(depth int) (file string, line int) {
-	d := depth
-	_, file, line, _ = runtime.Caller(d)
-	if strings.LastIndex(file, "/logger.go") > 0 {
-		d++
-		_, file, line, _ = runtime.Caller(d)
-	}
-	if strings.LastIndex(file, "/default.go") > 0 {
-		d++
-		_, file, line, _ = runtime.Caller(d)
+	ok := false
+	for i := depth; i < depth+10; i++ {
+		_, file, line, ok = runtime.Caller(i)
+		if ok && !skipPackage(file, "github.com/things-go/log") {
+			return file, line
+		}
 	}
 	return file, line
+}
+
+func skipPackage(file string, skipPackages ...string) bool {
+	if strings.HasSuffix(file, "_test.go") {
+		return false
+	}
+	for _, p := range skipPackages {
+		if strings.Contains(file, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // Caller returns a Valuer that returns a pkg/file:line description of the caller.

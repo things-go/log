@@ -2,13 +2,12 @@ package log
 
 import (
 	"context"
+	"fmt"
 
+	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
-
-// Valuer is returns a log value.
-type Valuer func(ctx context.Context) Field
 
 // Log wrap zap logger
 type Log struct {
@@ -21,10 +20,10 @@ type Log struct {
 // NewLoggerWith new logger with zap logger and atomic level
 func NewLoggerWith(logger *zap.Logger, lv zap.AtomicLevel) *Log {
 	return &Log{
-		logger,
-		lv,
-		nil,
-		context.Background(),
+		log:   logger,
+		level: lv,
+		fn:    nil,
+		ctx:   context.Background(),
 	}
 }
 
@@ -62,10 +61,10 @@ func (l *Log) SetDefaultValuer(fs ...Valuer) *Log {
 }
 
 // GetLevel returns the minimum enabled log level.
-func (l *Log) GetLevel() zapcore.Level { return l.level.Level() }
+func (l *Log) GetLevel() Level { return l.level.Level() }
 
 // Enabled returns true if the given level is at or above this level.
-func (l *Log) Enabled(lvl zapcore.Level) bool { return l.level.Enabled(lvl) }
+func (l *Log) Enabled(lvl Level) bool { return l.level.Enabled(lvl) }
 
 // V returns true if the given level is at or above this level.
 // same as Enabled
@@ -86,30 +85,32 @@ func (l *Log) WithValuer(fs ...Valuer) *Log {
 	fn = append(fn, l.fn...)
 	fn = append(fn, fs...)
 	return &Log{
-		l.log,
-		l.level,
-		fn,
-		l.ctx,
+		log:   l.log,
+		level: l.level,
+		fn:    fn,
+		ctx:   l.ctx,
 	}
 }
 
 // WithNewValuer return log with new Valuer function without default Valuer.
 func (l *Log) WithNewValuer(fs ...Valuer) *Log {
 	return &Log{
-		l.log,
-		l.level,
-		fs,
-		l.ctx,
+		log:   l.log,
+		level: l.level,
+		fn:    fs,
+		ctx:   l.ctx,
 	}
 }
 
 // WithContext return log with inject context.
+//
+// Deprecated: you should use XXXContext to inject context.
 func (l *Log) WithContext(ctx context.Context) *Log {
 	return &Log{
-		l.log,
-		l.level,
-		l.fn,
-		ctx,
+		log:   l.log,
+		level: l.level,
+		fn:    l.fn,
+		ctx:   ctx,
 	}
 }
 
@@ -117,20 +118,20 @@ func (l *Log) WithContext(ctx context.Context) *Log {
 // to the child don't affect the parent, and vice versa.
 func (l *Log) With(fields ...Field) *Log {
 	return &Log{
-		l.log.With(fields...),
-		l.level,
-		l.fn,
-		l.ctx,
+		log:   l.log.With(fields...),
+		level: l.level,
+		fn:    l.fn,
+		ctx:   l.ctx,
 	}
 }
 
 // Named adds a sub-scope to the logger's name. See Log.Named for details.
 func (l *Log) Named(name string) *Log {
 	return &Log{
-		l.log.Named(name),
-		l.level,
-		l.fn,
-		l.ctx,
+		log:   l.log.Named(name),
+		level: l.level,
+		fn:    l.fn,
+		ctx:   l.ctx,
 	}
 }
 
@@ -139,196 +140,160 @@ func (l *Log) Sync() error {
 	return l.log.Sync()
 }
 
-// Debug uses fmt.Sprint to construct and log a message.
-func (l *Log) Debug(args ...any) {
-	if !l.level.Enabled(DebugLevel) {
+func (l *Log) Log(ctx context.Context, level Level, args ...any) {
+	if !l.level.Enabled(level) {
 		return
 	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Debug(args...)
+	if len(l.fn) == 0 {
+		l.Sugar().Log(level, args...)
+	} else {
+		l.Logx(ctx, level, getMessage("", args))
+	}
 }
 
-// Info uses fmt.Sprint to construct and log a message.
-func (l *Log) Info(args ...any) {
-	if !l.level.Enabled(InfoLevel) {
+func (l *Log) Logf(ctx context.Context, level Level, template string, args ...any) {
+	if !l.level.Enabled(level) {
 		return
 	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Info(args...)
+	if len(l.fn) == 0 {
+		l.Sugar().Logf(level, template, args...)
+	} else {
+		l.Logx(ctx, level, getMessage(template, args))
+	}
 }
 
-// Warn uses fmt.Sprint to construct and log a message.
-func (l *Log) Warn(args ...any) {
-	if !l.level.Enabled(WarnLevel) {
+func (l *Log) Logw(ctx context.Context, level Level, msg string, keysAndValues ...any) {
+	if !l.level.Enabled(level) {
 		return
 	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Warn(args...)
+	if len(l.fn) == 0 {
+		l.Sugar().Logw(level, msg, keysAndValues...)
+	} else {
+		l.Logx(ctx, level, msg, l.sweetenFields(keysAndValues)...)
+	}
 }
 
-// Error uses fmt.Sprint to construct and log a message.
-func (l *Log) Error(args ...any) {
-	if !l.level.Enabled(ErrorLevel) {
+func (l *Log) Logx(ctx context.Context, level Level, msg string, fields ...Field) {
+	if !l.level.Enabled(level) {
 		return
 	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Error(args...)
-}
 
-// DPanic uses fmt.Sprint to construct and log a message. In development, the
-// logger then panics. (See DPanicLevel for details.)
-func (l *Log) DPanic(args ...any) {
-	if !l.level.Enabled(DPanicLevel) {
-		return
+	if len(l.fn) == 0 {
+		l.log.Log(level, msg, fields...)
+	} else {
+		tmpFields := fieldPool.Get()
+		defer fieldPool.Put(tmpFields)
+		for _, f := range l.fn {
+			tmpFields = append(tmpFields, f(ctx))
+		}
+		tmpFields = append(tmpFields, fields...)
+		l.log.Log(level, msg, tmpFields...)
 	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().DPanic(args...)
 }
 
-// Panic uses fmt.Sprint to construct and log a message, then panics.
-func (l *Log) Panic(args ...any) {
-	if !l.level.Enabled(PanicLevel) {
-		return
+const (
+	_oddNumberErrMsg    = "Ignored key without a value."
+	_nonStringKeyErrMsg = "Ignored key-value pairs with non-string keys."
+	_multipleErrMsg     = "Multiple errors without a key."
+)
+
+// getMessage format with Sprint, Sprintf, or neither.
+func getMessage(template string, fmtArgs []interface{}) string {
+	if len(fmtArgs) == 0 {
+		return template
 	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Panic(args...)
-}
 
-// Fatal uses fmt.Sprint to construct and log a message, then calls os.Exit.
-func (l *Log) Fatal(args ...any) {
-	if !l.level.Enabled(FatalLevel) {
-		return
+	if template != "" {
+		return fmt.Sprintf(template, fmtArgs...)
 	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Fatal(args...)
-}
 
-// Debugf uses fmt.Sprintf to log a templated message.
-func (l *Log) Debugf(template string, args ...any) {
-	if !l.level.Enabled(DebugLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Debugf(template, args...)
-}
-
-// Infof uses fmt.Sprintf to log a templated message.
-func (l *Log) Infof(template string, args ...any) {
-	if !l.level.Enabled(InfoLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Infof(template, args...)
-}
-
-// Warnf uses fmt.Sprintf to log a templated message.
-func (l *Log) Warnf(template string, args ...any) {
-	if !l.level.Enabled(WarnLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Warnf(template, args...)
-}
-
-// Errorf uses fmt.Sprintf to log a templated message.
-func (l *Log) Errorf(template string, args ...any) {
-	if !l.level.Enabled(ErrorLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Errorf(template, args...)
-}
-
-// DPanicf uses fmt.Sprintf to log a templated message. In development, the
-// logger then panics. (See DPanicLevel for details.)
-func (l *Log) DPanicf(template string, args ...any) {
-	if !l.level.Enabled(DPanicLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().DPanicf(template, args...)
-}
-
-// Panicf uses fmt.Sprintf to log a templated message, then panics.
-func (l *Log) Panicf(template string, args ...any) {
-	if !l.level.Enabled(PanicLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Panicf(template, args...)
-}
-
-// Fatalf uses fmt.Sprintf to log a templated message, then calls os.Exit.
-func (l *Log) Fatalf(template string, args ...any) {
-	if !l.level.Enabled(FatalLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Fatalf(template, args...)
-}
-
-// Debugw logs a message with some additional context. The variadic key-value
-// pairs are treated as they are in With.
-//
-// When debug-level logging is disabled, this is much faster than
-//
-//	s.With(keysAndValues).Debug(msg)
-func (l *Log) Debugw(msg string, keysAndValues ...any) {
-	if !l.level.Enabled(DebugLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Debugw(msg, keysAndValues...)
-}
-
-// Infow logs a message with some additional context. The variadic key-value
-// pairs are treated as they are in With.
-func (l *Log) Infow(msg string, keysAndValues ...any) {
-	if !l.level.Enabled(InfoLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Infow(msg, keysAndValues...)
-}
-
-// Warnw logs a message with some additional context. The variadic key-value
-// pairs are treated as they are in With.
-func (l *Log) Warnw(msg string, keysAndValues ...any) {
-	if !l.level.Enabled(WarnLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Warnw(msg, keysAndValues...)
-}
-
-// Errorw logs a message with some additional context. The variadic key-value
-// pairs are treated as they are in With.
-func (l *Log) Errorw(msg string, keysAndValues ...any) {
-	if !l.level.Enabled(ErrorLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Errorw(msg, keysAndValues...)
-}
-
-// DPanicw logs a message with some additional context. In development, the
-// logger then panics. (See DPanicLevel for details.) The variadic key-value
-// pairs are treated as they are in With.
-func (l *Log) DPanicw(msg string, keysAndValues ...any) {
-	if !l.level.Enabled(DPanicLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().DPanicw(msg, keysAndValues...)
-}
-
-// Panicw logs a message with some additional context, then panics. The
-// variadic key-value pairs are treated as they are in With.
-func (l *Log) Panicw(msg string, keysAndValues ...any) {
-	if !l.level.Enabled(PanicLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Panicw(msg, keysAndValues...)
-}
-
-// Fatalw logs a message with some additional context, then calls os.Exit. The
-// variadic key-value pairs are treated as they are in With.
-func (l *Log) Fatalw(msg string, keysAndValues ...any) {
-	if !l.level.Enabled(FatalLevel) {
-		return
-	}
-	l.log.With(injectField(l.ctx, l.fn)...).Sugar().Fatalw(msg, keysAndValues...)
-}
-
-func injectField(ctx context.Context, vs []Valuer) []Field {
-	var fields []Field
-
-	if len(vs) > 0 {
-		fields = make([]Field, 0, len(vs))
-		for _, f := range vs {
-			fields = append(fields, f(ctx))
+	if len(fmtArgs) == 1 {
+		if str, ok := fmtArgs[0].(string); ok {
+			return str
 		}
 	}
+	return fmt.Sprint(fmtArgs...)
+}
+
+func (l *Log) sweetenFields(args []interface{}) []Field {
+	if len(args) == 0 {
+		return nil
+	}
+
+	var (
+		// Allocate enough space for the worst case; if users pass only structured
+		// fields, we shouldn't penalize them with extra allocations.
+		fields    = make([]Field, 0, len(args))
+		invalid   invalidPairs
+		seenError bool
+	)
+
+	for i := 0; i < len(args); {
+		// This is a strongly-typed field. Consume it and move on.
+		if f, ok := args[i].(Field); ok {
+			fields = append(fields, f)
+			i++
+			continue
+		}
+
+		// If it is an error, consume it and move on.
+		if err, ok := args[i].(error); ok {
+			if !seenError {
+				seenError = true
+				fields = append(fields, zap.Error(err))
+			} else {
+				l.Errorx(_multipleErrMsg, zap.Error(err))
+			}
+			i++
+			continue
+		}
+
+		// Make sure this element isn't a dangling key.
+		if i == len(args)-1 {
+			l.Errorx(_oddNumberErrMsg, Any("ignored", args[i]))
+			break
+		}
+
+		// Consume this value and the next, treating them as a key-value pair. If the
+		// key isn't a string, add this pair to the slice of invalid pairs.
+		key, val := args[i], args[i+1]
+		if keyStr, ok := key.(string); !ok {
+			// Subsequent errors are likely, so allocate once up front.
+			if cap(invalid) == 0 {
+				invalid = make(invalidPairs, 0, len(args)/2)
+			}
+			invalid = append(invalid, invalidPair{i, key, val})
+		} else {
+			fields = append(fields, Any(keyStr, val))
+		}
+		i += 2
+	}
+
+	// If we encountered any invalid key-value pairs, log an error.
+	if len(invalid) > 0 {
+		l.Errorx(_nonStringKeyErrMsg, zap.Array("invalid", invalid))
+	}
 	return fields
+}
+
+type invalidPair struct {
+	position   int
+	key, value interface{}
+}
+
+func (p invalidPair) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	enc.AddInt64("position", int64(p.position))
+	Any("key", p.key).AddTo(enc)
+	Any("value", p.value).AddTo(enc)
+	return nil
+}
+
+type invalidPairs []invalidPair
+
+func (ps invalidPairs) MarshalLogArray(enc zapcore.ArrayEncoder) error {
+	var err error
+	for i := range ps {
+		err = multierr.Append(err, enc.AppendObject(ps[i]))
+	}
+	return err
 }

@@ -10,6 +10,17 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// adapter defined
+const (
+	AdapterConsole       = "console"        // console
+	AdapterFile          = "file"           // file
+	AdapterMulti         = "multi"          // file and console
+	AdapterCustom        = "custom"         // custom io.Writer
+	AdapterConsoleCustom = "console-custom" // console and custom io.Writer
+	AdapterFileCustom    = "file-custom"    // file and custom io.Writer
+	AdapterMultiCustom   = "multi-custom"   // file, console and custom io.Writer
+)
+
 // New constructs a new Log
 func New(opts ...Option) (*zap.Logger, zap.AtomicLevel) {
 	c := &Config{}
@@ -114,12 +125,6 @@ func toWriter(c *Config) zapcore.WriteSyncer {
 		return fileWriter()
 	case "multi":
 		return zapcore.NewMultiWriteSyncer(stdoutWriter(), fileWriter())
-	case "file-custom":
-		return zapcore.NewMultiWriteSyncer(customWriter(fileWriter())...)
-	case "console-custom":
-		return zapcore.NewMultiWriteSyncer(customWriter(stdoutWriter())...)
-	case "multi-custom":
-		return zapcore.NewMultiWriteSyncer(customWriter(stdoutWriter(), fileWriter())...)
 	case "custom":
 		ws := customWriter()
 		if len(ws) == 0 {
@@ -129,6 +134,12 @@ func toWriter(c *Config) zapcore.WriteSyncer {
 			return ws[0]
 		}
 		return zapcore.NewMultiWriteSyncer(ws...)
+	case "file-custom":
+		return zapcore.NewMultiWriteSyncer(customWriter(fileWriter())...)
+	case "console-custom":
+		return zapcore.NewMultiWriteSyncer(customWriter(stdoutWriter())...)
+	case "multi-custom":
+		return zapcore.NewMultiWriteSyncer(customWriter(stdoutWriter(), fileWriter())...)
 	default: // console
 		return stdoutWriter()
 	}

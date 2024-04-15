@@ -22,7 +22,6 @@ func Test_LoggerNormal(t *testing.T) {
 	log.Debug("Debug")
 	log.Info("Info")
 	log.Warn("Warn")
-	log.Info("info")
 	log.Error("Error")
 	log.DPanic("DPanic")
 }
@@ -31,7 +30,6 @@ func Test_LoggerFormater(t *testing.T) {
 	log.Debugf("Debugf: %s", "debug")
 	log.Infof("Infof: %s", "info")
 	log.Warnf("Warnf: %s", "warn")
-	log.Infof("Infof: %s", "info")
 	log.Errorf("Errorf: %s", "error")
 	log.DPanicf("DPanicf: %s", "dPanic")
 }
@@ -92,10 +90,6 @@ func Test_Logger_WithContext(t *testing.T) {
 	log.WithContext(ctx).
 		WithValuer(ctxValuer).
 		Debug("with context")
-
-	log.WithContext(ctx).
-		WithValuer(ctxValuer).
-		Debug("with field fn")
 }
 
 func shouldPanic(t *testing.T, f func()) {
