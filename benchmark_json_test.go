@@ -116,6 +116,22 @@ func Benchmark_Json_SugarKeyValuePair(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		logger.InfowContext(ctx,
 			"success",
+			"name", "jack",
+			"age", 18,
+			dfltCtx(ctx),
+		)
+	}
+}
+
+func Benchmark_Json_SugarKeyValuePairFields(b *testing.B) {
+	b.ReportAllocs()
+	b.StopTimer()
+	logger := newDiscardLogger(log.FormatJson)
+	ctx := context.Background()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		logger.InfowContext(ctx,
+			"success",
 			log.String("name", "jack"),
 			log.Int("age", 18),
 			dfltCtx(ctx),
@@ -123,7 +139,7 @@ func Benchmark_Json_SugarKeyValuePair(b *testing.B) {
 	}
 }
 
-func Benchmark_Json_SugarKeyValuePair_Use_Hook(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePairFields_Use_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatJson)
@@ -139,7 +155,7 @@ func Benchmark_Json_SugarKeyValuePair_Use_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_Json_SugarKeyValuePair_Use_WithFields(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePairFields_Use_WithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatJson)
@@ -154,7 +170,7 @@ func Benchmark_Json_SugarKeyValuePair_Use_WithFields(b *testing.B) {
 	}
 }
 
-func Benchmark_Json_SugarKeyValuePair_Use_WithFields_Hook(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePairFields_Use_WithFields_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatJson)
@@ -169,7 +185,7 @@ func Benchmark_Json_SugarKeyValuePair_Use_WithFields_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_Json_SugarKeyValuePair_Use_WithValuer(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePairFields_Use_WithValuer(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatJson)
@@ -184,7 +200,7 @@ func Benchmark_Json_SugarKeyValuePair_Use_WithValuer(b *testing.B) {
 	}
 }
 
-func Benchmark_Json_SugarKeyValuePair_Use_WithValuer_Hook(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePairFields_Use_WithValuer_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatJson)
