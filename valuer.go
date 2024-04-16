@@ -3,9 +3,6 @@ package log
 import (
 	"context"
 	"fmt"
-	"runtime"
-	"strconv"
-	"strings"
 	"time"
 
 	"go.uber.org/zap"
