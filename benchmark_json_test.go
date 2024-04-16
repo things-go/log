@@ -44,11 +44,13 @@ func Benchmark_Json_NativeLogger(b *testing.B) {
 		zapcore.InfoLevel,
 	)
 	logger := zap.New(core)
+	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		logger.Info("success",
 			zap.String("name", "jack"),
 			zap.Int("age", 18),
+			dfltCtx(ctx),
 		)
 	}
 }
@@ -98,11 +100,13 @@ func Benchmark_Json_NativeSugar(b *testing.B) {
 		zapcore.InfoLevel,
 	)
 	logger := zap.New(core).Sugar()
+	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		logger.Infow("success",
 			"name", "jack",
 			"age", 18,
+			dfltCtx(ctx),
 		)
 	}
 }
