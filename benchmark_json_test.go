@@ -10,7 +10,17 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func Benchmark_NativeLogger(b *testing.B) {
+func newDiscardLogger(format string) *log.Log {
+	return log.NewLogger(
+		log.WithAdapter("custom", io.Discard),
+		log.WithFormat(format),
+	)
+}
+func dfltCtx(ctx context.Context) log.Field {
+	return zap.String("dflt_key", "dflt_value")
+}
+
+func Benchmark_Json_NativeLogger(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	cfg := zap.NewProductionConfig()
@@ -29,20 +39,10 @@ func Benchmark_NativeLogger(b *testing.B) {
 	}
 }
 
-func newDiscardLogger() *log.Log {
-	return log.NewLogger(
-		log.WithAdapter("custom", io.Discard),
-		// log.WithFormat("console"),
-	)
-}
-func dfltCtx(ctx context.Context) log.Field {
-	return zap.String("dflt_key", "dflt_value")
-}
-
-func Benchmark_Logger(b *testing.B) {
+func Benchmark_Json_Logger(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -57,10 +57,10 @@ func Benchmark_Logger(b *testing.B) {
 	}
 }
 
-func Benchmark_Logger_Use_Hook(b *testing.B) {
+func Benchmark_Json_Logger_Use_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	logger.SetDefaultValuer(dfltCtx)
 	ctx := context.Background()
 	b.StartTimer()
@@ -75,7 +75,7 @@ func Benchmark_Logger_Use_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_NativeSugar(b *testing.B) {
+func Benchmark_Json_NativeSugar(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	cfg := zap.NewProductionConfig()
@@ -94,10 +94,10 @@ func Benchmark_NativeSugar(b *testing.B) {
 	}
 }
 
-func Benchmark_SugarKeyValuePair(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePair(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -110,10 +110,10 @@ func Benchmark_SugarKeyValuePair(b *testing.B) {
 	}
 }
 
-func Benchmark_SugarKeyValuePair_Use_Hook(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePair_Use_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	logger.SetDefaultValuer(dfltCtx)
 	ctx := context.Background()
 	b.StartTimer()
@@ -126,10 +126,10 @@ func Benchmark_SugarKeyValuePair_Use_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_SugarKeyValuePair_Use_WithFields(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePair_Use_WithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -141,10 +141,10 @@ func Benchmark_SugarKeyValuePair_Use_WithFields(b *testing.B) {
 	}
 }
 
-func Benchmark_SugarKeyValuePair_Use_WithFields_Hook(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePair_Use_WithFields_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	logger.SetDefaultValuer(dfltCtx)
 	ctx := context.Background()
 	b.StartTimer()
@@ -156,10 +156,10 @@ func Benchmark_SugarKeyValuePair_Use_WithFields_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_SugarKeyValuePair_Use_WithValuer(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePair_Use_WithValuer(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -171,10 +171,10 @@ func Benchmark_SugarKeyValuePair_Use_WithValuer(b *testing.B) {
 	}
 }
 
-func Benchmark_SugarKeyValuePair_Use_WithValuer_Hook(b *testing.B) {
+func Benchmark_Json_SugarKeyValuePair_Use_WithValuer_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	logger.SetDefaultValuer(dfltCtx)
 	ctx := context.Background()
 	b.StartTimer()
@@ -186,10 +186,10 @@ func Benchmark_SugarKeyValuePair_Use_WithValuer_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_SugarFormat(b *testing.B) {
+func Benchmark_Json_SugarFormat(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -207,10 +207,10 @@ func Benchmark_SugarFormat(b *testing.B) {
 	}
 }
 
-func Benchmark_SugarFormat_Use_Hook(b *testing.B) {
+func Benchmark_Json_SugarFormat_Use_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	logger := newDiscardLogger()
+	logger := newDiscardLogger(log.FormatJson)
 	logger.SetDefaultValuer(dfltCtx)
 	ctx := context.Background()
 	b.StartTimer()

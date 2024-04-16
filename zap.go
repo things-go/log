@@ -21,6 +21,12 @@ const (
 	AdapterMultiCustom   = "multi-custom"   // file, console and custom io.Writer
 )
 
+// format defined
+const (
+	FormatJson    = "json"
+	FormatConsole = "console"
+)
+
 // New constructs a new Log
 func New(opts ...Option) (*zap.Logger, zap.AtomicLevel) {
 	c := &Config{}
