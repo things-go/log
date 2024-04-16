@@ -10,6 +10,21 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+var testNativeZapEncoderConfig = zapcore.EncoderConfig{
+	TimeKey:        "ts",
+	LevelKey:       "level",
+	NameKey:        "logger",
+	CallerKey:      "caller",
+	FunctionKey:    zapcore.OmitKey,
+	MessageKey:     "msg",
+	StacktraceKey:  "stacktrace",
+	LineEnding:     zapcore.DefaultLineEnding,
+	EncodeLevel:    zapcore.LowercaseLevelEncoder,
+	EncodeTime:     zapcore.RFC3339TimeEncoder,
+	EncodeDuration: zapcore.StringDurationEncoder,
+	EncodeCaller:   zapcore.ShortCallerEncoder,
+}
+
 func newDiscardLogger(format string) *log.Log {
 	return log.NewLogger(
 		log.WithAdapter("custom", io.Discard),
@@ -23,9 +38,8 @@ func dfltCtx(ctx context.Context) log.Field {
 func Benchmark_Json_NativeLogger(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	cfg := zap.NewProductionConfig()
 	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(cfg.EncoderConfig),
+		zapcore.NewJSONEncoder(testNativeZapEncoderConfig),
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
 	)
@@ -78,9 +92,8 @@ func Benchmark_Json_Logger_Use_Hook(b *testing.B) {
 func Benchmark_Json_NativeSugar(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	cfg := zap.NewProductionConfig()
 	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(cfg.EncoderConfig),
+		zapcore.NewJSONEncoder(testNativeZapEncoderConfig),
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
 	)

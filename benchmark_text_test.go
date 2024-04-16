@@ -13,9 +13,8 @@ import (
 func Benchmark_Text_NativeLogger(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	cfg := zap.NewDevelopmentConfig()
 	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(cfg.EncoderConfig),
+		zapcore.NewConsoleEncoder(testNativeZapEncoderConfig),
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
 	)
@@ -68,9 +67,8 @@ func Benchmark_Text_Logger_Use_Hook(b *testing.B) {
 func Benchmark_Text_NativeSugar(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
-	cfg := zap.NewProductionConfig()
 	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(cfg.EncoderConfig),
+		zapcore.NewConsoleEncoder(testNativeZapEncoderConfig),
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
 	)
