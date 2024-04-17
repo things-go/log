@@ -24,6 +24,14 @@ func Test_LoggerNormal(t *testing.T) {
 	log.Warn("Warn")
 	log.Error("Error")
 	log.DPanic("DPanic")
+
+	// no hook
+	l := log.WithNewValuer()
+	l.Debug("Debug")
+	l.Info("Info")
+	l.Warn("Warn")
+	l.Error("Error")
+	l.DPanic("DPanic")
 }
 
 func Test_LoggerFormater(t *testing.T) {
@@ -32,6 +40,14 @@ func Test_LoggerFormater(t *testing.T) {
 	log.Warnf("Warnf: %s", "warn")
 	log.Errorf("Errorf: %s", "error")
 	log.DPanicf("DPanicf: %s", "dPanic")
+
+	// no hook
+	l := log.WithNewValuer()
+	l.Debugf("Debugf: %s", "debug")
+	l.Infof("Infof: %s", "info")
+	l.Warnf("Warnf: %s", "warn")
+	l.Errorf("Errorf: %s", "error")
+	l.DPanicf("DPanicf: %s", "dPanic")
 }
 
 func Test_LoggerKeyValue(t *testing.T) {

@@ -141,43 +141,30 @@ func (l *Log) Sync() error {
 }
 
 func (l *Log) Log(ctx context.Context, level Level, args ...any) {
-	if !l.level.Enabled(level) {
-		return
-	}
-	if len(l.fn) == 0 {
-		l.Sugar().Log(level, args...)
-	} else {
-		l.Logx(ctx, level, getMessage("", args))
-	}
+	l.Logx(ctx, level, formatMessage("", args))
 }
 
 func (l *Log) Logf(ctx context.Context, level Level, template string, args ...any) {
-	if !l.level.Enabled(level) {
-		return
-	}
-	if len(l.fn) == 0 {
-		l.Sugar().Logf(level, template, args...)
-	} else {
-		l.Logx(ctx, level, getMessage(template, args))
-	}
+	l.Logx(ctx, level, formatMessage(template, args))
 }
 
 func (l *Log) Logw(ctx context.Context, level Level, msg string, keysAndValues ...any) {
 	if !l.level.Enabled(level) {
 		return
 	}
-	if len(l.fn) == 0 {
-		l.Sugar().Logw(level, msg, keysAndValues...)
-	} else {
-		l.Logx(ctx, level, msg, l.sweetenFields(keysAndValues)...)
+	fc := defaultFieldPool.Get()
+	defer defaultFieldPool.Put(fc)
+	for _, f := range l.fn {
+		fc.Fields = append(fc.Fields, f(ctx))
 	}
+	fc.Fields = l.appendSweetenFields(fc.Fields, keysAndValues)
+	l.log.Log(level, msg, fc.Fields...)
 }
 
 func (l *Log) Logx(ctx context.Context, level Level, msg string, fields ...Field) {
 	if !l.level.Enabled(level) {
 		return
 	}
-
 	if len(l.fn) == 0 {
 		l.log.Log(level, msg, fields...)
 	} else {
@@ -197,16 +184,15 @@ const (
 	_multipleErrMsg     = "Multiple errors without a key."
 )
 
-// getMessage format with Sprint, Sprintf, or neither.
-func getMessage(template string, fmtArgs []interface{}) string {
+// formatMessage format with Sprint, Sprintf, or neither.
+// copy from zap(sugar.go)
+func formatMessage(template string, fmtArgs []interface{}) string {
 	if len(fmtArgs) == 0 {
 		return template
 	}
-
 	if template != "" {
 		return fmt.Sprintf(template, fmtArgs...)
 	}
-
 	if len(fmtArgs) == 1 {
 		if str, ok := fmtArgs[0].(string); ok {
 			return str
@@ -215,7 +201,7 @@ func getMessage(template string, fmtArgs []interface{}) string {
 	return fmt.Sprint(fmtArgs...)
 }
 
-func (l *Log) sweetenFields(args []interface{}) []Field {
+func (l *Log) appendSweetenFields(fields []Field, args []interface{}) []Field {
 	if len(args) == 0 {
 		return nil
 	}
@@ -223,7 +209,6 @@ func (l *Log) sweetenFields(args []interface{}) []Field {
 	var (
 		// Allocate enough space for the worst case; if users pass only structured
 		// fields, we shouldn't penalize them with extra allocations.
-		fields    = make([]Field, 0, len(args))
 		invalid   invalidPairs
 		seenError bool
 	)
