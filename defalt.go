@@ -101,7 +101,7 @@ func Named(name string) *Log { return defaultLogger.Named(name) }
 // Sync flushes any buffered log entries.
 func Sync() error { return defaultLogger.Sync() }
 
-//****** named after the log level or ending in "Context" for log.Print-style logging
+// ****** named after the log level or ending in "Context" for log.Print-style logging
 
 func Debug(args ...any) {
 	defaultLogger.Debug(args...)
@@ -146,7 +146,7 @@ func FatalContext(ctx context.Context, args ...any) {
 	defaultLogger.FatalContext(ctx, args...)
 }
 
-//****** ending in "f" or "fContext" for log.Printf-style logging
+// ****** ending in "f" or "fContext" for log.Printf-style logging
 
 func Debugf(template string, args ...any) {
 	defaultLogger.Debugf(template, args...)
@@ -236,7 +236,7 @@ func FatalwContext(ctx context.Context, msg string, keysAndValues ...any) {
 	defaultLogger.FatalwContext(ctx, msg, keysAndValues...)
 }
 
-//****** ending in "x" or "xContext" for structured logging
+// ****** ending in "x" or "xContext" for structured logging
 
 func Debugx(msg string, fields ...Field) {
 	defaultLogger.Debugx(msg, fields...)

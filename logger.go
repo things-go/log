@@ -182,7 +182,7 @@ func (l *Log) Logx(ctx context.Context, level Level, msg string, fields ...Field
 	}
 }
 
-//****** named after the log level or ending in "Context" for log.Print-style logging
+// ****** named after the log level or ending in "Context" for log.Print-style logging
 
 // Debug (see DebugContext)
 func (l *Log) Debug(args ...any) {
@@ -255,7 +255,7 @@ func (l *Log) FatalContext(ctx context.Context, args ...any) {
 	l.Log(ctx, FatalLevel, args...)
 }
 
-//****** ending in "f" or "fContext" for log.Printf-style logging
+// ****** ending in "f" or "fContext" for log.Printf-style logging
 
 // Debugf see DebugfContext
 func (l *Log) Debugf(template string, args ...any) {
@@ -328,7 +328,7 @@ func (l *Log) FatalfContext(ctx context.Context, template string, args ...any) {
 	l.Logf(ctx, FatalLevel, template, args...)
 }
 
-//****** ending in "w" or "wContext" for loosely-typed structured logging
+// ****** ending in "w" or "wContext" for loosely-typed structured logging
 
 // Debugw see DebugwContext
 func (l *Log) Debugw(msg string, keysAndValues ...any) {
@@ -411,7 +411,7 @@ func (l *Log) FatalwContext(ctx context.Context, msg string, keysAndValues ...an
 	l.Logw(ctx, FatalLevel, msg, keysAndValues...)
 }
 
-//****** ending in "x" or "xContext" for structured logging
+// ****** ending in "x" or "xContext" for structured logging
 
 // Debug (see DebugContext)
 func (l *Log) Debugx(msg string, fields ...Field) {
