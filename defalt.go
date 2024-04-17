@@ -191,7 +191,7 @@ func FatalfContext(ctx context.Context, template string, args ...any) {
 	defaultLogger.FatalfContext(ctx, template, args...)
 }
 
-//****** ending in "w" or "wContext" for loosely-typed structured logging
+// ****** ending in "w" or "wContext" for loosely-typed structured logging
 
 func Debugw(msg string, keysAndValues ...any) {
 	defaultLogger.Debugw(msg, keysAndValues...)
