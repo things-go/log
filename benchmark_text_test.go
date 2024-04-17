@@ -37,14 +37,13 @@ func Benchmark_Text_Logger(b *testing.B) {
 	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		logger.
-			InfoxContext(
-				ctx,
-				"success",
-				log.String("name", "jack"),
-				log.Int("age", 18),
-				dfltCtx(ctx),
-			)
+		logger.InfoxContext(
+			ctx,
+			"success",
+			log.String("name", "jack"),
+			log.Int("age", 18),
+			dfltCtx(ctx),
+		)
 	}
 }
 
@@ -56,13 +55,12 @@ func Benchmark_Text_Logger_Use_Hook(b *testing.B) {
 	ctx := context.Background()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		logger.
-			InfoxContext(
-				ctx,
-				"success",
-				log.String("name", "jack"),
-				log.Int("age", 18),
-			)
+		logger.InfoxContext(
+			ctx,
+			"success",
+			log.String("name", "jack"),
+			log.Int("age", 18),
+		)
 	}
 }
 
@@ -86,7 +84,7 @@ func Benchmark_Text_NativeSugar(b *testing.B) {
 	}
 }
 
-func Benchmark_Text_SugarKeyValuePair(b *testing.B) {
+func Benchmark_Text_KeyValuePair(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -102,7 +100,7 @@ func Benchmark_Text_SugarKeyValuePair(b *testing.B) {
 	}
 }
 
-func Benchmark_Text_SugarKeyValuePairFields(b *testing.B) {
+func Benchmark_Text_KeyValuePairFields(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -118,7 +116,7 @@ func Benchmark_Text_SugarKeyValuePairFields(b *testing.B) {
 	}
 }
 
-func Benchmark_Text_SugarKeyValuePairFields_Use_Hook(b *testing.B) {
+func Benchmark_Text_KeyValuePairFields_Use_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -134,7 +132,7 @@ func Benchmark_Text_SugarKeyValuePairFields_Use_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_Text_SugarKeyValuePairFields_Use_WithFields(b *testing.B) {
+func Benchmark_Text_KeyValuePairFields_Use_WithFields(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -149,7 +147,7 @@ func Benchmark_Text_SugarKeyValuePairFields_Use_WithFields(b *testing.B) {
 	}
 }
 
-func Benchmark_Text_SugarKeyValuePairFields_Use_WithFields_Hook(b *testing.B) {
+func Benchmark_Text_KeyValuePairFields_Use_WithFields_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -164,7 +162,7 @@ func Benchmark_Text_SugarKeyValuePairFields_Use_WithFields_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_Text_SugarKeyValuePairFields_Use_WithValuer(b *testing.B) {
+func Benchmark_Text_KeyValuePairFields_Use_WithValuer(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -179,7 +177,7 @@ func Benchmark_Text_SugarKeyValuePairFields_Use_WithValuer(b *testing.B) {
 	}
 }
 
-func Benchmark_Text_SugarKeyValuePairFields_Use_WithValuer_Hook(b *testing.B) {
+func Benchmark_Text_KeyValuePairFields_Use_WithValuer_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -194,7 +192,7 @@ func Benchmark_Text_SugarKeyValuePairFields_Use_WithValuer_Hook(b *testing.B) {
 	}
 }
 
-func Benchmark_Text_SugarFormat(b *testing.B) {
+func Benchmark_Text_Format(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -209,13 +207,11 @@ func Benchmark_Text_SugarFormat(b *testing.B) {
 				return log.Int("age", 18)
 			},
 			dfltCtx,
-		).InfofContext(ctx,
-			"success",
-		)
+		).InfofContext(ctx, "success")
 	}
 }
 
-func Benchmark_Text_SugarFormat_Use_Hook(b *testing.B) {
+func Benchmark_Text_Format_Use_Hook(b *testing.B) {
 	b.ReportAllocs()
 	b.StopTimer()
 	logger := newDiscardLogger(log.FormatConsole)
@@ -226,8 +222,6 @@ func Benchmark_Text_SugarFormat_Use_Hook(b *testing.B) {
 		logger.WithValuer(
 			log.ImmutString("name", "jack"),
 			log.ImmutInt("age", 18),
-		).InfofContext(ctx,
-			"success",
-		)
+		).InfofContext(ctx, "success")
 	}
 }

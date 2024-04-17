@@ -507,6 +507,7 @@ func formatMessage(template string, fmtArgs []any) string {
 	return fmt.Sprint(fmtArgs...)
 }
 
+// copy from zap(sugar.go)
 func (l *Log) appendSweetenFields(fields []Field, args []any) []Field {
 	if len(args) == 0 {
 		return nil
