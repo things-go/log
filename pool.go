@@ -12,6 +12,11 @@ type fieldContainer struct {
 	Fields []Field
 }
 
+func (c *fieldContainer) reset() *fieldContainer {
+	c.Fields = c.Fields[:0]
+	return c
+}
+
 type fieldPool struct {
 	pool sync.Pool
 }
@@ -27,10 +32,10 @@ func newFieldPool() *fieldPool {
 }
 
 func (p *fieldPool) Get() *fieldContainer {
-	return p.pool.Get().(*fieldContainer)
+	c := p.pool.Get().(*fieldContainer)
+	return c.reset()
 }
 
 func (p *fieldPool) Put(c *fieldContainer) {
-	c.Fields = c.Fields[:0]
-	p.pool.Put(c)
+	p.pool.Put(c.reset())
 }
