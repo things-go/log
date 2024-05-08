@@ -5,22 +5,20 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
-type Field = zap.Field
-type Level = zapcore.Level
-type ObjectMarshaler = zapcore.ObjectMarshaler
+// NewAtomicLevel creates an AtomicLevel with InfoLevel and above logging
+// enabled.
+func NewAtomicLevel() AtomicLevel { return zap.NewAtomicLevel() }
 
-const (
-	DebugLevel  = zap.DebugLevel
-	InfoLevel   = zap.InfoLevel
-	WarnLevel   = zap.WarnLevel
-	ErrorLevel  = zap.ErrorLevel
-	DPanicLevel = zap.DPanicLevel
-	PanicLevel  = zap.PanicLevel
-	FatalLevel  = zap.FatalLevel
-)
+// NewAtomicLevelAt is a convenience function that creates an AtomicLevel
+// and then calls SetLevel with the given level.
+func NewAtomicLevelAt(l Level) AtomicLevel { return zap.NewAtomicLevelAt(l) }
+
+// ParseAtomicLevel parses an AtomicLevel based on a lowercase or all-caps ASCII
+// representation of the log level. If the provided ASCII representation is
+// invalid an error is returned.
+func ParseAtomicLevel(text string) (AtomicLevel, error) { return zap.ParseAtomicLevel(text) }
 
 func Err(val error) Field                    { return zap.Error(val) }
 func Errors(key string, val []error) Field   { return zap.Errors(key, val) }

@@ -156,8 +156,8 @@ func (l *Log) Logw(ctx context.Context, level Level, msg string, keysAndValues .
 	if !l.level.Enabled(level) {
 		return
 	}
-	fc := defaultFieldPool.Get()
-	defer defaultFieldPool.Put(fc)
+	fc := poolGet()
+	defer poolPut(fc)
 	for _, f := range l.fn {
 		fc.Fields = append(fc.Fields, f(ctx))
 	}
@@ -172,8 +172,8 @@ func (l *Log) Logx(ctx context.Context, level Level, msg string, fields ...Field
 	if len(l.fn) == 0 {
 		l.log.Log(level, msg, fields...)
 	} else {
-		fc := defaultFieldPool.Get()
-		defer defaultFieldPool.Put(fc)
+		fc := poolGet()
+		defer poolPut(fc)
 		for _, f := range l.fn {
 			fc.Fields = append(fc.Fields, f(ctx))
 		}

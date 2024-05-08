@@ -10,6 +10,22 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type AtomicLevel = zap.AtomicLevel
+type Field = zap.Field
+type Level = zapcore.Level
+type ObjectMarshaler = zapcore.ObjectMarshaler
+
+// log level defined
+const (
+	DebugLevel  = zap.DebugLevel
+	InfoLevel   = zap.InfoLevel
+	WarnLevel   = zap.WarnLevel
+	ErrorLevel  = zap.ErrorLevel
+	DPanicLevel = zap.DPanicLevel
+	PanicLevel  = zap.PanicLevel
+	FatalLevel  = zap.FatalLevel
+)
+
 // adapter defined
 const (
 	AdapterConsole       = "console"        // console
@@ -25,6 +41,14 @@ const (
 const (
 	FormatJson    = "json"
 	FormatConsole = "console"
+)
+
+// encode level defined
+const (
+	EncodeLevelLowercase      = "LowercaseLevelEncoder"      // 小写编码器
+	EncodeLevelLowercaseColor = "LowercaseColorLevelEncoder" // 小写编码器带颜色
+	EncodeLevelCapital        = "CapitalLevelEncoder"        // 大写编码器
+	EncodeLevelCapitalColor   = "CapitalColorLevelEncoder"   // 大写编码器带颜色
 )
 
 // New constructs a new Log
